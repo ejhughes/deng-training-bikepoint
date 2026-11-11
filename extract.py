@@ -29,14 +29,15 @@ while attempts <= max_attempts:
 
     # If status code is 2xx, save the data to a file
     if 200 <= status_code < 300:
-        # Save the json (data) part of the response then exit the loop
-        data = response.json()   ### .json() isolates the data returned from the API, rather than returning all the results of an API call, including headers, status codes, etc.
+        try:   ### Try/except block to catch any errors that may occur while saving the file
+            data = response.json()   ### Save the json (data) part of the response then exit the loop .json() isolates the data returned from the API, rather than returning all the results of an API call, including headers, status codes, etc.
 
-        # Write the json data response into the file variable created above, called filename
-        with open(filename, "w") as file:   ### "w" for write
-            json.dump(data, file)
+            with open(filename, "w") as file:   ###Write the json data response into the file variable created above, called filename, "w" for write
+                json.dump(data, file)
 
-        print(f'File {filename} saved successfully')
+            print(f'File {filename} saved successfully')
+        except Exception as e:
+            print(f'An error occurred while saving the file: {e}')
 
         break   ### break out of loop if API call is successful
 
@@ -45,10 +46,13 @@ while attempts <= max_attempts:
         break   ### for 3xx or 4xx status codes, likely need to make some changes to the API call, so break of out the loop
 
     else:
-        print(f'Attempt {attempts} failed, status code: {status_code}. Retrying...')
-        attempt += 1
-        time.sleep(30)   #### Wait 30 seconds before retrying the API call
-else:
-    print(f'API call failed after {max_attempts} attempts, status code: {status_code}')
+        if attempts == max_attempts:
+            print(f'Attempt {attempts} failed, status code: {status_code}. Max attempts reached, exiting...')
+            break   ### if max attempts reached, exit the loop
+        else:
+            print(f'Attempt {attempts} failed, status code: {status_code}. Retrying...') 
+            time.sleep(30)   #### Wait 30 seconds before retrying the API call
+        attempts += 1
+           
 
 
