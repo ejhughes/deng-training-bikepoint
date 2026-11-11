@@ -1,12 +1,30 @@
 import os
 import json
 import time
+import logging
 from datetime import datetime
 import requests
 
 # Create timestamp for output file name
 timestamp = datetime.now().strftime('%Y-%m-%d %H-%M-%S')  ### strftime: string format time
-# Create folder for output file, it's ok if it already exists
+
+# Create folder for log files
+log_dir = 'logs'
+os.makedirs(log_dir, exist_ok=True)
+log_filename = f'{log_dir}/{timestamp}.log'
+
+# Set up logging configuration
+logging.basicConfig(
+    filename=log_filename,
+    format='%(asctime)s - %(levelname)s - %(message)s',  ### asctime: time of log entry, levelname: debug/info/warning/critical, message: message of log entry
+    level=logging.INFO   ###ignore anything below info, i.e.: debug messages
+)
+
+logger = logging.getLogger()  
+logger.info('Logger was successfully initialised') 
+# From here, script will return one logger message, with the format specified above, wherever we have specified a print to terminal.
+
+# Create folder for output data file, it's ok if it already exists
 data_dir = "data"
 os.makedirs(data_dir, exist_ok=True)
 # Create output file name with timestamp, in the data folder
@@ -36,21 +54,26 @@ while attempts <= max_attempts:
                 json.dump(data, file)
 
             print(f'File {filename} saved successfully')
+            logger.info(f'File {filename} saved successfully')
         except Exception as e:
             print(f'An error occurred while saving the file: {e}')
+            logger.error(f'An error occurred while saving the file: {e}')
 
         break   ### break out of loop if API call is successful
 
     elif 300 <= status_code < 500:
         print(f'API call failed, status code: {status_code}')
+        logger.error(f'API call failed, status code: {status_code}')
         break   ### for 3xx or 4xx status codes, likely need to make some changes to the API call, so break of out the loop
 
     else:
         if attempts == max_attempts:
             print(f'Attempt {attempts} failed, status code: {status_code}. Max attempts reached, exiting...')
+            logger.warning(f'Attempt {attempts} failed, status code: {status_code}. Max attempts reached, exiting...')
             break   ### if max attempts reached, exit the loop
         else:
             print(f'Attempt {attempts} failed, status code: {status_code}. Retrying...') 
+            logger.warning(f'Attempt {attempts} failed, status code: {status_code}. Retrying...') 
             time.sleep(30)   #### Wait 30 seconds before retrying the API call
         attempts += 1
            
